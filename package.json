@@ -4,7 +4,6 @@
     "description": "Allow to choose from multiple tasks quickly",
     "publisher": "jeremyfa",
     "license": "MIT",
-    "publisher": "",
     "version": "0.0.1",
     "engines": {
         "vscode": "^1.4.0"
