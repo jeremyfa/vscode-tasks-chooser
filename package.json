@@ -4,7 +4,7 @@
     "description": "Allow to choose from multiple tasks quickly",
     "publisher": "jeremyfa",
     "license": "MIT",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "engines": {
         "vscode": "^1.4.0"
     },
@@ -13,15 +13,27 @@
         "onCommand:tasks-chooser.reload"
     ],
     "contributes": {
-        "commands": [{
-            "title": "Reload tasks chooser",
-            "command": "tasks-chooser.reload",
-            "category": "Tasks chooser"
-        },{
-            "title": "Select task",
-            "command": "tasks-chooser.select",
-            "category": "Tasks chooser"
-        }]
+        "commands": [
+            {
+                "title": "Reload tasks chooser",
+                "command": "tasks-chooser.reload",
+                "category": "Tasks chooser"
+            },
+            {
+                "title": "Select task",
+                "command": "tasks-chooser.select",
+                "category": "Tasks chooser"
+            }
+        ]
+    },
+    "bugs": "https://github.com/jeremyfa/vscode-tasks-chooser/issues",
+    "homepage": "https://github.com/jeremyfa/vscode-tasks-chooser/blob/master/README.md",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/jeremyfa/vscode-tasks-chooser.git"
+    },
+    "scripts": {
+        "vscode:prepublish": "haxe build.hxml"
     },
     "main": "./tasks-chooser"
 }
