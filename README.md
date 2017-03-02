@@ -11,7 +11,7 @@ The idea is to be able to quickly change `.vscode/tasks.json` contents in order 
 Everything is configured from a single JSON file located at `.vscode/tasks-chooser.json` (relative to your workspace root).
 You can see an example at [example/.vscode/tasks-chooser.json](https://github.com/jeremyfa/vscode-tasks-chooser/tree/master/example/.vscode/tasks-chooser.json).
 
-When `.vscode/tasks-chooser.json` file is provided, an item appear on the status bar allowing to choose between _items/targets_.
+When a `.vscode/tasks-chooser.json` file is provided, an item appears on the status bar allowing to choose between _items/targets_.
 Everytime a target is selected, `.vscode/tasks.json` is updated accordingly.
 
 `.vscode/tasks.json` content is computed by merging the selected `item` and it's `baseItem` (if provided) from `.vscode/tasks-chooser.json`.
