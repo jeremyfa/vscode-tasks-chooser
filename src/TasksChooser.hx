@@ -136,7 +136,7 @@ class TasksChooser {
 
         // Update/add status bar item
         if (statusBarItem == null) {
-            statusBarItem = Vscode.window.createStatusBarItem(Left);
+            statusBarItem = Vscode.window.createStatusBarItem(Left, -1); // Ideally, we would want to make priority configurable
             context.subscriptions.push(statusBarItem);
         }
         if (item != null && item.displayName != null) {
