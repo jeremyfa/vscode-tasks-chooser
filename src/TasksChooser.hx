@@ -68,7 +68,6 @@ class TasksChooser {
             reload();
         }));
         context.subscriptions.push(watcher);
-        
 
     } //watchChooserFile
 
@@ -149,6 +148,8 @@ class TasksChooser {
         chooserIndex = targetIndex;
 
         var item = Json.parse(Json.stringify(listContent.items[chooserIndex]));
+
+        // Merge with base item
         if (listContent.baseItem != null) {
             for (key in Reflect.fields(listContent.baseItem)) {
                 if (!Reflect.hasField(item, key)) {
@@ -156,7 +157,18 @@ class TasksChooser {
                 }
             }
         }
+
+        // Add chooser index
         item.chooserIndex = chooserIndex;
+        
+        // Check if there is an onSelect command
+        var onSelect:Dynamic = null;
+        if (item != null) {
+            onSelect = item.onSelect;
+            if (onSelect != null) {
+                Reflect.deleteField(item, "onSelect");
+            }
+        }
 
         // Update tasks.json
         if (item != null) {
@@ -177,6 +189,17 @@ class TasksChooser {
         statusBarItem.tooltip = item.description != null ? item.description : '';
         statusBarItem.command = "tasks-chooser.select";
         statusBarItem.show();
+
+        // Run onSelect command, if any
+        if (onSelect != null) {
+            try {
+                var args:Array<String> = onSelect.args;
+                Vscode.commands.executeCommand(onSelect.command, args);
+            }
+            catch (e:Dynamic) {
+                Vscode.window.showErrorMessage("Failed run onSelect command: " + e);
+            }
+        }
 
     } //setChooserIndex
 
