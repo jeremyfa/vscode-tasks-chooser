@@ -92,6 +92,13 @@ class TasksChooser {
             index++;
         }
 
+        // Put selected task at the top
+        if (chooserIndex > 0) {
+            var selectedItem = pickItems[chooserIndex];
+            pickItems.splice(chooserIndex, 1);
+            pickItems.unshift(selectedItem);
+        }
+
         var placeHolder = null;
         if (listContent.selectDescription != null) {
             placeHolder = listContent.selectDescription;
