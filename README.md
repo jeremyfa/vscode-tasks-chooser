@@ -21,6 +21,6 @@ Everytime a target is selected, `.vscode/tasks.json` is updated accordingly.
 
 # Commands
 
-`tasks-chooser.reload` Reloads the `tasks-chooser.json` file and updates the status bar item.
+`tasks-chooser.reload` Reloads the `tasks-chooser.json` file and updates the status bar item. Note that the status bar item is already updated automatically when changing `tasks-chooser.json` file.
 
 `tasks-chooser.select` Select between available items/targets. This is the command run when clicking on the status bar item.

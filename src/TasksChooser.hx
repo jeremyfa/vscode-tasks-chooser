@@ -6,6 +6,7 @@ import haxe.Json;
 
 import vscode.ExtensionContext;
 import vscode.StatusBarItem;
+import vscode.FileSystemWatcher;
 
 class TasksChooser {
 
@@ -32,6 +33,8 @@ class TasksChooser {
 
     var chooserIndex:Dynamic;
 
+    var watcher:FileSystemWatcher;
+
 /// Lifecycle
 
     function new(context:ExtensionContext) {
@@ -48,7 +51,26 @@ class TasksChooser {
             select();
         }));
 
+        watchChooserFile();
+
     } //new
+
+/// Watch
+
+    function watchChooserFile():Void {
+
+        watcher = Vscode.workspace.createFileSystemWatcher(Path.join([Vscode.workspace.rootPath, '.vscode/tasks-chooser.json']), false, false, true);
+
+        context.subscriptions.push(watcher.onDidChange(function(a) {
+            reload();
+        }));
+        context.subscriptions.push(watcher.onDidCreate(function(a) {
+            reload();
+        }));
+        context.subscriptions.push(watcher);
+        
+
+    } //watchChooserFile
 
 /// Actions
 
