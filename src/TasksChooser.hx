@@ -3,6 +3,7 @@ package;
 import sys.io.File;
 import haxe.io.Path;
 import haxe.Json;
+import js.node.ChildProcess;
 
 import vscode.ExtensionContext;
 import vscode.StatusBarItem;
@@ -192,13 +193,21 @@ class TasksChooser {
 
         // Run onSelect command, if any
         if (onSelect != null) {
-            try {
-                var args:Array<String> = onSelect.args;
-                Vscode.commands.executeCommand(onSelect.command, args);
-            }
-            catch (e:Dynamic) {
-                Vscode.window.showErrorMessage("Failed run onSelect command: " + e);
-            }
+            var args:Array<String> = onSelect.args;
+            if (args == null) args = [];
+            var showError = onSelect.showError;
+            var proc = ChildProcess.spawn(onSelect.command, args, {cwd: Vscode.workspace.rootPath});
+            proc.stdout.on('data', function(data) {
+                js.Node.process.stdout.write(data);
+            });
+            proc.stderr.on('data', function(data) {
+                js.Node.process.stderr.write(data);
+            });
+            proc.on('close', function(code) {
+                if (code != 0 && showError) {
+                    Vscode.window.showErrorMessage("Failed run onSelect command: exited with code " + code);
+                }
+            });
         }
 
     } //setChooserIndex
