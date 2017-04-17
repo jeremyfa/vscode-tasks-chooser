@@ -96,6 +96,7 @@ class TasksChooser {
         }
         catch (e:Dynamic) {
             Vscode.window.showErrorMessage("Failed to load: **.vscode/tasks-chooser.json**. Please check its content is valid.");
+            js.Node.console.error(e);
         }
 
     } //reload
@@ -138,6 +139,7 @@ class TasksChooser {
             }
             catch (e:Dynamic) {
                 Vscode.window.showErrorMessage("Failed to select task: " + e);
+                js.Node.console.error(e);
             }
 
         });
