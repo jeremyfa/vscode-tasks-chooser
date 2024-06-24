@@ -1,13 +1,12 @@
 package;
 
-import sys.io.File;
-import haxe.io.Path;
 import haxe.Json;
+import haxe.io.Path;
 import js.node.ChildProcess;
-
+import sys.io.File;
 import vscode.ExtensionContext;
-import vscode.StatusBarItem;
 import vscode.FileSystemWatcher;
+import vscode.StatusBarItem;
 
 class TasksChooser {
 
@@ -54,13 +53,17 @@ class TasksChooser {
 
         watchChooserFile();
 
-    } //new
+    }
 
 /// Watch
 
     function watchChooserFile():Void {
 
-        watcher = Vscode.workspace.createFileSystemWatcher(Path.join([Vscode.workspace.rootPath, '.vscode/tasks-chooser.json']), false, false, true);
+        if (Vscode.workspace.workspaceFolders == null) {
+            return;
+        }
+
+        watcher = Vscode.workspace.createFileSystemWatcher(Path.join([Vscode.workspace.workspaceFolders[0].uri.path, '.vscode/tasks-chooser.json']), false, false, true);
 
         context.subscriptions.push(watcher.onDidChange(function(a) {
             reload();
@@ -70,17 +73,17 @@ class TasksChooser {
         }));
         context.subscriptions.push(watcher);
 
-    } //watchChooserFile
+    }
 
 /// Actions
 
     function reload():Void {
 
         try {
-            var listPath = Path.join([Vscode.workspace.rootPath, '.vscode/tasks-chooser.json']);
+            var listPath = Path.join([Vscode.workspace.workspaceFolders[0].uri.path, '.vscode/tasks-chooser.json']);
             listContent = Json.parse(File.getContent(listPath));
 
-            tasksPath = Path.join([Vscode.workspace.rootPath, '.vscode/tasks.json']);
+            tasksPath = Path.join([Vscode.workspace.workspaceFolders[0].uri.path, '.vscode/tasks.json']);
             var tasksContent:Dynamic = null;
             try {
                 tasksContent = Json.parse(File.getContent(tasksPath));
@@ -99,7 +102,7 @@ class TasksChooser {
             js.Node.console.error(e);
         }
 
-    } //reload
+    }
 
     function select() {
 
@@ -133,7 +136,7 @@ class TasksChooser {
             if (choice == null || choice.index == chooserIndex) {
                 return;
             }
-            
+
             try {
                 setChooserIndex(choice.index);
             }
@@ -144,26 +147,88 @@ class TasksChooser {
 
         });
 
-    } //select
+    }
 
     function setChooserIndex(targetIndex:Int) {
 
         chooserIndex = targetIndex;
 
-        var item = Json.parse(Json.stringify(listContent.items[chooserIndex]));
+        var item:Dynamic = Json.parse(Json.stringify(listContent.items[chooserIndex]));
 
         // Merge with base item
         if (listContent.baseItem != null) {
-            for (key in Reflect.fields(listContent.baseItem)) {
-                if (!Reflect.hasField(item, key)) {
-                    Reflect.setField(item, key, Reflect.field(listContent.baseItem, key));
+
+            // New format with tasks array?
+            if (listContent.baseItem.tasks != null || listContent.baseTask != null) {
+                var tasks = [];
+
+                var displayName:String = null;
+                var description:String = null;
+                if (item.displayName != null) {
+                    displayName = item.displayName;
+                    Reflect.deleteField(item, "displayName");
+                }
+                if (item.description != null) {
+                    description = item.description;
+                    Reflect.deleteField(item, "description");
+                }
+
+                inline function wrapWithBaseTask(task:Dynamic) {
+                    if (listContent.baseTask != null) {
+                        for (key in Reflect.fields(listContent.baseTask)) {
+                            if (!Reflect.hasField(task, key)) {
+                                Reflect.setField(task, key, Reflect.field(listContent.baseTask, key));
+                            }
+                        }
+                    }
+                    if (displayName != null && task.label == null) {
+                        item.label = displayName;
+                    }
+                    return task;
+                }
+
+                if (item.tasks != null && item.tasks is Array) {
+                    var rawItemTasks:Array<Dynamic> = item.tasks;
+                    for (rawItemTask in rawItemTasks) {
+                        tasks.push(
+                            wrapWithBaseTask(rawItemTask)
+                        );
+                    }
+                    Reflect.deleteField(item, 'tasks');
+                }
+                else {
+                    tasks.push(
+                        wrapWithBaseTask(item)
+                    );
+                }
+                if (listContent.baseItem.tasks != null && listContent.baseItem.tasks is Array) {
+                    var rawTasks:Array<Dynamic> = listContent.baseItem.tasks;
+                    for (rawTask in rawTasks) {
+                        tasks.push(rawTask);
+                    }
+                }
+
+                item = Json.parse(Json.stringify(listContent.baseItem));
+                item.tasks = tasks;
+                if (displayName != null && item.displayName == null) {
+                    item.displayName = displayName;
+                }
+                if (description != null && item.description == null) {
+                    item.description = description;
+                }
+            }
+            else {
+                for (key in Reflect.fields(listContent.baseItem)) {
+                    if (!Reflect.hasField(item, key)) {
+                        Reflect.setField(item, key, Reflect.field(listContent.baseItem, key));
+                    }
                 }
             }
         }
 
         // Add chooser index
         item.chooserIndex = chooserIndex;
-        
+
         // Check if there is an onSelect command
         var onSelect:Dynamic = null;
         if (item != null) {
@@ -188,17 +253,17 @@ class TasksChooser {
         } else {
             statusBarItem.text = "Task #" + chooserIndex;
         }
-        statusBarItem.text = "[ " + statusBarItem.text + " ]";
+        statusBarItem.text = "[ " + statusBarItem.text + " ]";
         statusBarItem.tooltip = item.description != null ? item.description : '';
         statusBarItem.command = "tasks-chooser.select";
         statusBarItem.show();
 
         // Run onSelect command, if any
-        if (onSelect != null) {
+        if (onSelect != null && Vscode.workspace.workspaceFolders != null) {
             var args:Array<String> = onSelect.args;
             if (args == null) args = [];
             var showError = onSelect.showError;
-            var proc = ChildProcess.spawn(onSelect.command, args, {cwd: Vscode.workspace.rootPath});
+            var proc = ChildProcess.spawn(onSelect.command, args, {cwd: Vscode.workspace.workspaceFolders[0].uri.path});
             proc.stdout.on('data', function(data) {
                 js.Node.process.stdout.write(data);
             });
@@ -212,6 +277,6 @@ class TasksChooser {
             });
         }
 
-    } //setChooserIndex
+    }
 
 }
