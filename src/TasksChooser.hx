@@ -19,7 +19,7 @@ class TasksChooser {
 
         instance = new TasksChooser(context);
 
-    } //activate
+    }
 
 /// Properties
 
@@ -63,7 +63,7 @@ class TasksChooser {
             return;
         }
 
-        watcher = Vscode.workspace.createFileSystemWatcher(Path.join([Vscode.workspace.workspaceFolders[0].uri.path, '.vscode/tasks-chooser.json']), false, false, true);
+        watcher = Vscode.workspace.createFileSystemWatcher(Path.join([Vscode.workspace.workspaceFolders[0].uri.fsPath, '.vscode/tasks-chooser.json']), false, false, true);
 
         context.subscriptions.push(watcher.onDidChange(function(a) {
             reload();
@@ -80,10 +80,10 @@ class TasksChooser {
     function reload():Void {
 
         try {
-            var listPath = Path.join([Vscode.workspace.workspaceFolders[0].uri.path, '.vscode/tasks-chooser.json']);
+            var listPath = Path.join([Vscode.workspace.workspaceFolders[0].uri.fsPath, '.vscode/tasks-chooser.json']);
             listContent = Json.parse(File.getContent(listPath));
 
-            tasksPath = Path.join([Vscode.workspace.workspaceFolders[0].uri.path, '.vscode/tasks.json']);
+            tasksPath = Path.join([Vscode.workspace.workspaceFolders[0].uri.fsPath, '.vscode/tasks.json']);
             var tasksContent:Dynamic = null;
             try {
                 tasksContent = Json.parse(File.getContent(tasksPath));
@@ -263,7 +263,7 @@ class TasksChooser {
             var args:Array<String> = onSelect.args;
             if (args == null) args = [];
             var showError = onSelect.showError;
-            var proc = ChildProcess.spawn(onSelect.command, args, {cwd: Vscode.workspace.workspaceFolders[0].uri.path});
+            var proc = ChildProcess.spawn(onSelect.command, args, {cwd: Vscode.workspace.workspaceFolders[0].uri.fsPath});
             proc.stdout.on('data', function(data) {
                 js.Node.process.stdout.write(data);
             });
